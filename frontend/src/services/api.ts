@@ -61,3 +61,18 @@ const Chatbot = () => {
 };
 
 export default Chatbot;
+import axios from 'axios';
+
+export const getChatbotResponse = async (query: string) => {
+  const response = await axios.post('/api/chatbot', { query });
+  return response.data.response;
+};
+// backend/routes/chatbotRoutes.ts
+import express from 'express';
+import { getChatbotResponse } from '../controllers/chatbotController';
+
+const router = express.Router();
+
+router.post('/', getChatbotResponse);
+
+export default router;
