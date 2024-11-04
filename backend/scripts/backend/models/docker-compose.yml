@@ -1,0 +1,49 @@
+version: '3.8'
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "5000:5000"
+    depends_on:
+      - mongodb
+      - mysql
+      - ai-python
+    volumes:
+      - ./backend:/app
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend:/app
+
+  mongodb:
+    image: mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  mysql:
+    image: mysql
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: healthwise_db
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  ai-python:
+    image: python:3.8-slim
+    volumes:
+      - ./backend/scripts:/scripts
+    working_dir: /scripts
+    command: python chatbot_service.py
+
+volumes:
+  mongo_data:
+  mysql_data:
