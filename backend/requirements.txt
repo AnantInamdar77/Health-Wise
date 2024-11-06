@@ -1,0 +1,5 @@
+flask
+langchain
+ujson
+pydantic
+langchain_community
