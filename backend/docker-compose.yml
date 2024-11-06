@@ -1,0 +1,90 @@
+version: '3.8'
+
+services:
+  backend:
+    build: .
+    ports:
+      - "5000:5000"
+    depends_on:
+      - mongodb
+      - mysql
+      - ai-python
+    volumes:
+      - .:/app
+    environment:
+      MONGO_URI: mongodb://mongodb:27017/healthwise
+      MYSQL_HOST: mysql
+      MYSQL_USER: root
+      MYSQL_PASSWORD: password
+      MYSQL_DATABASE: healthwise_db
+    # Optional: Add health check to ensure backend is ready
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]  # Adjust the endpoint as necessary
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile  # Ensure you specify the Dockerfile if needed
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    volumes:
+      - ../frontend:/app
+    environment:
+      REACT_APP_API_URL: http://backend:5000  # Example environment variable for API URL
+    # Optional: Add health check to ensure frontend is ready
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]  # Adjust the endpoint as necessary
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  mongodb:
+    image: mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    # Optional: Add health check for MongoDB
+    healthcheck:
+      test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  mysql:
+    image: mysql
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: healthwise_db
+    volumes:
+      - mysql_data:/var/lib/mysql
+    # Optional: Add health check for MySQL
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p$password"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  ai-python:
+    image: python:3.8-slim
+    volumes:
+      - ./scripts:/scripts
+    working_dir: /scripts
+    command: python chatbot_service.py
+    # Optional: Add health check for the Python service
+    healthcheck:
+      test: ["CMD", "python", "chatbot_service.py", "--check"]  # Adjust according to your script
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+volumes:
+  mongo_data:
+  mysql_data:

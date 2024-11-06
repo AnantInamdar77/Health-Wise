@@ -3,6 +3,7 @@ from langchain.chains import ConversationalRetrievalChain
 from langchain.llms import OpenAI
 from langchain.document_loaders import MongoDocumentLoader
 from langchain.vectorstores import FAISS
+from langchain_community.llms import OpenAI
 
 def initialize_chatbot():
     loader = MongoDocumentLoader("mongodb://localhost:27017/healthwise", "knowledge_base")
