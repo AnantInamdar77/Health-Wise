@@ -1,4 +1,5 @@
 version: '3.8'
+
 services:
   backend:
     build: ./backend
@@ -10,6 +11,8 @@ services:
       - ai-python
     volumes:
       - ./backend:/app
+    environment:
+      - DATABASE_URL=mysql://root:password@mysql/healthwise_db  # Example environment variable
 
   frontend:
     build: ./frontend
@@ -26,6 +29,11 @@ services:
       - "27017:27017"
     volumes:
       - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongo", "--eval", "db.runCommand({ ping: 1 })"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
   mysql:
     image: mysql
@@ -36,6 +44,11 @@ services:
       MYSQL_DATABASE: healthwise_db
     volumes:
       - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
   ai-python:
     image: python:3.8-slim
@@ -43,7 +56,13 @@ services:
       - ./backend/scripts:/scripts
     working_dir: /scripts
     command: python chatbot_service.py
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}  # Example of passing an API key from .env file
 
 volumes:
   mongo_data:
   mysql_data:
+
+networks:
+  default:
+    driver: bridge
